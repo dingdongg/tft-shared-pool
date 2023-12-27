@@ -1,17 +1,72 @@
 use std::collections::HashMap;
-use crate::util::Unit;
+use std::fs;
+use crate::util::{Unit, TFTTrait, make_unit};
+use std::str::FromStr;
+use crate::BetterHTTPResponse;
+
+const ONE_COST_UNITS_COUNT: u32 = 22;
+const TWO_COST_UNITS_COUNT: u32 = 20;
+const THREE_COST_UNITS_COUNT: u32 = 17;
+const FOUR_COST_UNITS_COUNT: u32 = 10;
+const FIVE_COST_UNITS_COUNT: u32 = 9;
 
 pub struct UnitsStore {
     pool: HashMap<String, u32>,
+    units_index: HashMap<String, Unit>,
 }
 
 impl UnitsStore {
     pub fn new() -> Self {
-        Self { 
-            pool: HashMap::new(),
+        let units_index = Self::init_index();
+        let mut pool = HashMap::new();
+
+        for unit in units_index.values() {
+            match unit.cost {
+                1 => pool.insert(unit.name.clone(), ONE_COST_UNITS_COUNT),
+                2 => pool.insert(unit.name.clone(), TWO_COST_UNITS_COUNT),
+                3 => pool.insert(unit.name.clone(), THREE_COST_UNITS_COUNT),
+                4 => pool.insert(unit.name.clone(), FOUR_COST_UNITS_COUNT),
+                5 => pool.insert(unit.name.clone(), FIVE_COST_UNITS_COUNT),
+                _ => continue,
+            };
         }
+
+        Self { pool, units_index }
     }
 
+    fn init_index() -> HashMap<String, Unit> {
+        let mut map = HashMap::new();
+        let file = fs::read_to_string("content.json").expect("FILE NOT FOUND");
+        let res_json: BetterHTTPResponse = serde_json::from_str(&file).expect("ILL-FORMATTED JSON");
+
+        let champions_slice = &res_json.sets.get(&10).unwrap().champions;
+
+        for champion in champions_slice {
+            // println!("{}", champion.apiName);
+            if champion.apiName.contains("TFT10") && champion.traits.len() != 0 && champion.cost <= 5 {
+                let parsed_traits: Vec<TFTTrait> = champion.traits
+                    .clone()
+                    .into_iter()
+                    .map(|t| TFTTrait::from_str(&t).unwrap())
+                    .collect();
+
+                let cloned_name = champion.name.clone();
+                let unit = make_unit(&champion.name, champion.cost, parsed_traits, false);
+
+                map.insert(cloned_name, unit);
+            }
+        }
+
+        map
+    }
+
+    pub fn check_pool(&self) -> () {
+        println!("{:#?}", self.pool)
+    }
+
+    pub fn get_unit_info(&self, name: &str) -> &Unit {
+        self.units_index.get(name).unwrap()
+    }
     /**
      * select 5 random (not necessarily unique) units, and return them
      */
