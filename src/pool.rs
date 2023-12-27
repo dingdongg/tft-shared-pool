@@ -10,6 +10,14 @@ const THREE_COST_UNITS_COUNT: u32 = 17;
 const FOUR_COST_UNITS_COUNT: u32 = 10;
 const FIVE_COST_UNITS_COUNT: u32 = 9;
 
+const UNIT_COUNTS: [u32;5] = [
+    ONE_COST_UNITS_COUNT,
+    TWO_COST_UNITS_COUNT,
+    THREE_COST_UNITS_COUNT,
+    FOUR_COST_UNITS_COUNT,
+    FIVE_COST_UNITS_COUNT,
+];
+
 pub struct UnitsStore {
     pool: HashMap<String, u32>,
     units_index: HashMap<String, Unit>,
@@ -21,14 +29,7 @@ impl UnitsStore {
         let mut pool = HashMap::new();
 
         for unit in units_index.values() {
-            match unit.cost {
-                1 => pool.insert(unit.name.clone(), ONE_COST_UNITS_COUNT),
-                2 => pool.insert(unit.name.clone(), TWO_COST_UNITS_COUNT),
-                3 => pool.insert(unit.name.clone(), THREE_COST_UNITS_COUNT),
-                4 => pool.insert(unit.name.clone(), FOUR_COST_UNITS_COUNT),
-                5 => pool.insert(unit.name.clone(), FIVE_COST_UNITS_COUNT),
-                _ => continue,
-            };
+            pool.insert(unit.name.clone(), UNIT_COUNTS[unit.cost as usize - 1]);
         }
 
         Self { pool, units_index }
