@@ -16,7 +16,6 @@ use std::{
     time::Duration,
 };
 use pool::UnitsStore;
-use lazy_static::lazy_static;
 
 use util::{make_unit, TFTTrait};
 mod util;
